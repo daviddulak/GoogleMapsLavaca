@@ -1,0 +1,25 @@
+.view.map {
+  .offline {
+    .absolute();
+    background: url('../assets/img/map-placeholder.jpg') center center no-repeat;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:after {
+      content: '';
+      .absolute();
+      z-index: 1;
+      background-color: rgba(255,255,255,0.7);
+    }
+    .block {
+      z-index: 2;
+      display: inline-block;
+      text-align: center;
+      p {
+        padding-top: 15px;
+        max-width: 300px;
+      }
+    }
+  }
+}

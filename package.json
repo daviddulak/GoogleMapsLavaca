@@ -1,0 +1,28 @@
+{
+  "name": "google-maps-lavaca",
+  "version": "1.0.0",
+  "description": "A Google Maps integration for Lavaca",
+  "main": "google-maps-lavaca.js",
+  "scripts": {
+    "postinstall": "./install.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://daviddulak@github.com/daviddulak/GoogleMapsLavaca.git"
+  },
+  "keywords": [
+    "lavaca",
+    "google",
+    "maps",
+    "maps",
+    "spa",
+    "webapp",
+    "cordova"
+  ],
+  "author": "David Dulak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/daviddulak/GoogleMapsLavaca/issues"
+  },
+  "homepage": "https://github.com/daviddulak/GoogleMapsLavaca#readme"
+}

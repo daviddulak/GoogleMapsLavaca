@@ -41,8 +41,10 @@ export let GoogleMapsModel = EventDispatcher.extend(function GoogleMapsModel() {
   },
   removeMarker(markerIdentity) {
     var i = this.findMarkerArrayPosition(markerIdentity);
-    this.markers[i].setMap(null);
-    this.markers.splice(i, 1);
+    if (i) {
+      this.markers[i].setMap(null);
+      this.markers.splice(i, 1);
+    }
   },
   addMarker(markerObj) {
     var myLatLng = new window.google.maps.LatLng(markerObj.latitude, markerObj.longitude);
@@ -65,8 +67,8 @@ export let GoogleMapsModel = EventDispatcher.extend(function GoogleMapsModel() {
     return myLatLng;
   },
   setMarkers(markers, ignoreBounds) {
+    this.clearMarkers();
     if (window.GoogleMapsView.map && markers.length) {
-      this.clearMarkers();
       var bounds = new window.google.maps.LatLngBounds();
       var myLatLng;
       
@@ -76,8 +78,8 @@ export let GoogleMapsModel = EventDispatcher.extend(function GoogleMapsModel() {
       }
 
       if (markers.length === 1) {
-        window.GoogleMapsView.map.setZoom(15);
-        window.GoogleMapsView.map.setCenter(myLatLng);
+        window.GoogleMapsView.setZoom(15);
+        window.GoogleMapsView.setCenter(myLatLng);
       }
 
       if (markers.length>1 && !ignoreBounds) {
@@ -85,7 +87,7 @@ export let GoogleMapsModel = EventDispatcher.extend(function GoogleMapsModel() {
       }
 
       if (window.GoogleMapsView.map.getZoom() === 0) {
-        window.GoogleMapsView.map.setZoom(this.zoom);
+        window.GoogleMapsView.setZoom(this.zoom);
       }
 
       //this.markerCluster.addMarkers(this.markers);

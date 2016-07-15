@@ -86,11 +86,14 @@ export let GoogleMapsView = View.extend(function GoogleMapsView(){
     this.map = new window.google.maps.Map( 
       this.el.find('.map-canvas')[0],
       {
-        disableDefaultUI: true,
+        //disableDefaultUI: true,
         minZoom: 2,
         styles: window.GoogleMapsModel.customStyle,
         zoom: window.GoogleMapsModel.zoom,
-        center: {lat: window.GoogleMapsModel.centerLat, lng: window.GoogleMapsModel.centerLng}
+        center: {lat: window.GoogleMapsModel.centerLat, lng: window.GoogleMapsModel.centerLng},
+        mapTypeControl: false,
+        streetViewControl: false,
+        rotateControl: false
       }
     );
 
@@ -106,6 +109,10 @@ export let GoogleMapsView = View.extend(function GoogleMapsView(){
     window.google.maps.event.addListener(this.map, 'center_changed', this.onCenterChangeMap.bind(this));
     window.google.maps.event.addListener(this.map, 'tilesloaded', this.onTilesLoadedMap.bind(this));
 
+    $(window).on('resize', debounce(function() {
+      this.resizeMap();
+    }.bind(this), 600));
+
     // this.markerCluster = new MarkerClusterer(this.map);
 
     if (!window.GoogleMap) {
@@ -115,14 +122,49 @@ export let GoogleMapsView = View.extend(function GoogleMapsView(){
 
   },
 
+  centerOnSearchLocation(query) {
+    var promise = new $.Deferred();
+
+    if (!query || query === '(Current Location)' || query === 'Current Location' || query === '') {
+      promise.resolve();
+      return promise;
+    }
+
+    if (this.map && query && query.length) {
+      var service = new window.google.maps.places.PlacesService(this.map);
+
+      service.textSearch({
+        'query': query
+      }, function(results, status) {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results[0]) {
+          var latLng = results[0].geometry.location;
+          this.setCenter(latLng);
+          this.setZoom(15);
+          promise.resolve();
+        } else {
+          console.log('Places Search failed due to: ' + status);
+          promise.reject();
+        }
+      }.bind(this));
+    } else {
+      promise.reject();
+    }
+
+    return promise;
+  },
+
   centerOnCurrentLocation() {
-    this.getCurrentLocation().then(
+    return this.getCurrentLocation().then(
       function success(coords) {
-        window.GoogleMapsView.map.panTo({lat:coords.latitude,lng:coords.longitude});
+        this.panTo({lat:coords.latitude,lng:coords.longitude});
       }.bind(this),
       function error() {
         console.warn('Failed to get location');
       }.bind(this));
+  },
+
+  centerOnLocation(lat, lng) {
+    this.panTo({lat:lat,lng:lng});
   },
 
   getCurrentLocation() {
@@ -144,6 +186,42 @@ export let GoogleMapsView = View.extend(function GoogleMapsView(){
       promise.reject();
     }
     return promise;
+  },
+
+  resizeMap() {
+    if (this.map) {
+      window.google.maps.event.trigger(this.map, 'resize');
+      this.setCenter(new window.google.maps.LatLng(window.GoogleMapsModel.centerLat, window.GoogleMapsModel.centerLng));
+      this.setZoom(window.GoogleMapsModel.zoom);
+    }
+  },
+
+  panTo(point) {
+    if (this.map) {
+      this.map.panTo(point);
+    }
+  },
+
+  setZoom(zoom) {
+    if (this.map) {
+      this.map.setZoom(zoom);
+    }
+  },
+
+  getZoom() {
+    return this.map ? this.map.getZoom() : 12;
+  },
+
+  setCenter(point) {
+    if (this.map) {
+      this.map.setCenter(point);
+    }
+  },
+
+  getCenter() {
+    return this.map ? this.map.getCenter() : {
+      lat: function(){return window.GoogleMapsModel.centerLat;},
+      lng: function(){return window.GoogleMapsModel.centerLng;}};
   },
 
   onTapMarker(marker) {
@@ -170,17 +248,16 @@ export let GoogleMapsView = View.extend(function GoogleMapsView(){
   onMouseOutMap() {
 
   },
-  onMouseMoveMap() {
-
-  },
   onMouseUpMap() {
 
   },
   onZoomChangeMap() {
-
+    window.GoogleMapsModel.zoom = this.getZoom();
   },
   onCenterChangeMap() {
-
+    var center = this.getCenter();
+    window.GoogleMapsModel.centerLat = center.lat();
+    window.GoogleMapsModel.centerLng = center.lng();
   },
   onTilesLoadedMap() {
     console.log('tiles loaded');
